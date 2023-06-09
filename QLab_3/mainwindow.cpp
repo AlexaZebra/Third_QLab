@@ -61,7 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
      * QChart *createScatterChart() const;
      *
     */
-    //themeWidget = new ThemeWidget();
+    themeWidget = new ThemeWidget();
 
 
     //Устанавливаем размер главного окна
@@ -85,6 +85,7 @@ MainWindow::MainWindow(QWidget *parent)
     /*Создание графика*/
     QtCharts::QChart *chartBar = new QtCharts::QChart();
     chartBar->setTitle("Bar chart"); //Устанавливаем заголовок графика
+
     /*Класс QStackedBarSeries представляет серию данных в виде вертикально расположенных полос, по одной полосе на категорию.*/
     QStackedBarSeries *series = new QStackedBarSeries(chartBar); //Работаем с гиcтограммой.
     // Класс QBarSet представляет один набор столбцов на гистограмме.
@@ -116,7 +117,10 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(splitter);
 
 }
+
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+
