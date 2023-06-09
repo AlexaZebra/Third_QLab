@@ -11,8 +11,7 @@ CONFIG += c++17
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp \
-        themewidget.cpp
+        mainwindow.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -21,8 +20,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     IOCContainer.h \
-    mainwindow.h \
-    themewidget.h
+    mainwindow.h
 
 FORMS += \
     mainwindow.ui

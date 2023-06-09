@@ -1,126 +1,126 @@
-
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
-#include <QString>
-#include <QTime>
-#include <QLabel>
-#include <QSplitter>
+
+#include <QFileDialog>
+#include <QtCharts/QChartView>
+#include <QMessageBox>
+#include <QPdfWriter>
 #include <QtCharts/QChart>
-#include <QtCharts/QChartView>
-#include <QtCharts/QStackedBarSeries>
-#include <QtCharts/QBarSet>
-#include <QtCharts/QBarSeries>
 
-
-#include <QtCharts/QChartView>
-#include <QtCharts/QPieSeries>
-#include <QtCharts/QPieSlice>
-#include <QtCharts/QAbstractBarSeries>
-#include <QtCharts/QPercentBarSeries>
-#include <QtCharts/QStackedBarSeries>
-#include <QtCharts/QBarSeries>
-#include <QtCharts/QBarSet>
-#include <QtCharts/QLineSeries>
-#include <QtCharts/QSplineSeries>
-#include <QtCharts/QScatterSeries>
-#include <QtCharts/QAreaSeries>
-#include <QtCharts/QLegend>
-#include <QtWidgets/QGridLayout>
-#include <QtWidgets/QFormLayout>
-#include <QtWidgets/QComboBox>
-#include <QtWidgets/QSpinBox>
-#include <QtWidgets/QCheckBox>
-#include <QtWidgets/QGroupBox>
-#include <QtWidgets/QLabel>
-#include <QtCore/QTime>
-#include <QtCharts/QBarCategoryAxis>
-
-//#include <QtCharts/QAbstractAxis>
-//#include <QtCharts/QAbstractSeries>
-
-QT_CHARTS_BEGIN_NAMESPACE
-class QChartView;
-class QChart;
-QT_CHARTS_END_NAMESPACE
-
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 {
-    ui->setupUi(this);
-    /*
-     * Создаем виджет.
-     * Виджет из официального примера с графиками.
-     * В этом примере рассмтривается принцип созадния различных графиков.
-     * Обратите внимание в предложенной реализации на методы
-     * QChart *createAreaChart() const;
-     * QChart *createBarChart(int valueCount) const;
-     * QChart *createPieChart() const;
-     * QChart *createLineChart() const;
-     * QChart *createSplineChart() const;
-     * QChart *createScatterChart() const;
-     *
-    */
-    themeWidget = new ThemeWidget();
+    DirectoryPath = ""; // инициализация директории
 
+    FileModel = std::make_unique<QFileSystemModel>(this); // модель файловой системы
+    FileModel->setRootPath(DirectoryPath); // задание корневой директории
 
-    //Устанавливаем размер главного окна
-    this->setGeometry(100, 100, 1500, 500);
-    this->setStatusBar(new QStatusBar(this));
-    this->statusBar()->showMessage("Choosen Path: ");
-    /*
-     * QSplitter - Разделитель.
-     *  Для знакомства  -  * https://evileg.com/ru/post/73/
-     *
-    */
-    QLabel *justTmpLabel = new QLabel(this);
-    justTmpLabel->setText("------В этой части будем отображать файлы с данными для графика----");
+    TableFileView = std::make_unique<QTableView>(this); // виджет таблицы файлов
+    TableFileView->setModel(FileModel.get()); // установка модели
+    TableFileView->setSelectionMode(QAbstractItemView::SingleSelection); // режим выбора одной строки
+    TableFileView->setSelectionBehavior(QAbstractItemView::SelectRows); // выделение всей строки
 
+    ChartView = std::make_unique<QtCharts::QChartView>(this); // виджет диаграммы
 
-    QSplitter *splitter = new QSplitter(parent);
-    splitter->addWidget(justTmpLabel);
-    //1.Добавление диаграмы(графика). Диаграмму создаем в несколько шагов.
-    QtCharts::QChartView *chartView = nullptr;
-    //Объявление представления графика.Представление отображает график.
-    /*Создание графика*/
-    QtCharts::QChart *chartBar = new QtCharts::QChart();
-    chartBar->setTitle("Bar chart"); //Устанавливаем заголовок графика
+    PathLabel = std::make_unique<QLabel>(this); // метка для отображения текущего пути
 
-    /*Класс QStackedBarSeries представляет серию данных в виде вертикально расположенных полос, по одной полосе на категорию.*/
-    QStackedBarSeries *series = new QStackedBarSeries(chartBar); //Работаем с гиcтограммой.
-    // Класс QBarSet представляет один набор столбцов на гистограмме.
-    QBarSet *set = nullptr;
+    BtnPrintChart = std::make_unique<QPushButton>("Print Chart", this); // кнопка печати диаграммы
+    BtnChangeDirectory = std::make_unique<QPushButton>("Change Directory", this); // кнопка смены директории в таблице
 
-    //	set seed for random stuff
-    qsrand(QTime(0, 0, 0).secsTo(QTime::currentTime()));
+    ChkbxBlackWhiteChart = std::make_unique<QCheckBox>("Black and White Chart", this); // флажок для изменения цветов диаграммы
 
-    for (int i(0); i < 10; i++) {
+    ComboboxChartType = std::make_unique<QComboBox>(this); // комбобокс для изменения типа диаграммы
+    ComboboxChartType->addItem("Bar Chart");
+    ComboboxChartType->addItem("Pie Chart");
+    ComboboxChartType->addItem("Line Chart");
 
-        set = new QBarSet("Bar set " + QString::number(i));
-        qreal yValue(0);
+    WrapperLayout = std::make_unique<QHBoxLayout>(this); // главный компоновщик
 
-        for (int j(0); j < 5; j++) {
-            yValue = yValue + (qreal)(qrand() % 121 + j) / (qreal) 10 + j;
-            *set << yValue;
-        }
+    ChartWidgetLayout = std::make_unique<QHBoxLayout>(); // компоновщик для виджетов диаграммы
+    ChartWidgetLayout->addWidget(BtnPrintChart.get());
+    ChartWidgetLayout->addWidget(ChkbxBlackWhiteChart.get());
+    ChartWidgetLayout->addWidget(ComboboxChartType.get());
 
-        series->append(set);
-    }
+    FileExplorerLayout = std::make_unique<QVBoxLayout>(); // компоновщик для проводника файлов
+    FileExplorerLayout->addWidget(TableFileView.get());
+    FileExplorerLayout->addWidget(BtnChangeDirectory.get());
 
-    chartView = new QChartView(chartBar);
-    chartView->setMinimumSize(QSize(700, 500));
-    chartBar->addSeries(series);
-    chartBar->createDefaultAxes();
-    splitter->addWidget(chartView);
-    //Еще добавми themeWidget. Теперь будут отображаться три объекта разделенные сплиттером.
-    splitter->addWidget(themeWidget);
-    setCentralWidget(splitter);
+    ChartLayout = std::make_unique<QVBoxLayout>(); // компоновщик для диаграммы
+    ChartLayout->addLayout(ChartWidgetLayout.get());
+    ChartLayout->addWidget(PathLabel.get());
+    ChartLayout->addWidget(ChartView.get());
 
+    FileSplitter = std::make_unique<QSplitter>(Qt::Horizontal); // разделитель для разделения проводника файлов и диаграммы
+    FileSplitter->addWidget(TableFileView.get());
+    FileSplitter->addWidget(BtnChangeDirectory.get());
+
+    ChartSplitter = std::make_unique<QSplitter>(Qt::Vertical); // разделитель для разделения диаграммы и остальных виджетов
+    ChartSplitter->addWidget(PathLabel.get());
+    ChartSplitter->addWidget(ChartView.get());
+
+    WrapperLayout->addLayout(FileExplorerLayout.get());
+    WrapperLayout->addWidget(ChartSplitter.get());
+
+    setLayout(WrapperLayout.get()); // установка главного компоновщика
+
+    setMinimumSize(800, 600); // установка минимального размера окна
+
+    connect(BtnChangeDirectory.get(), &QPushButton::clicked, this, &MainWindow::changeDirectory);
+    connect(TableFileView.get()->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::fileSelection);
+    connect(ComboboxChartType.get(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::changeChartType);
+    connect(BtnPrintChart.get(), &QPushButton::clicked, this, &MainWindow::printChart);
+    connect(ChkbxBlackWhiteChart.get(), &QCheckBox::toggled, this, &MainWindow::colorSwap);
 }
 
 MainWindow::~MainWindow()
 {
-    delete ui;
+    // Освобождение ресурсов
 }
 
+void MainWindow::changeDirectory()
+{
+    // Обработчик смены директории
+    QString newDirectory = QFileDialog::getExistingDirectory(this, "Choose Directory", DirectoryPath);
+    if (!newDirectory.isEmpty())
+    {
+        DirectoryPath = newDirectory;
+        FileModel->setRootPath(DirectoryPath);
+        TableFileView->setRootIndex(FileModel->index(DirectoryPath));
+        PathLabel->setText(DirectoryPath);
+    }
+}
 
+void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    // Обработчик изменения выбранного файла в таблице
+    Q_UNUSED(selected);
+    Q_UNUSED(deselected);
+    // Логика обработки изменения выбранного файла
+}
+
+void MainWindow::changeChartType()
+{
+    // Обработчик изменения типа диаграммы
+    // Логика изменения типа диаграммы
+}
+
+void MainWindow::printChart()
+{
+    // Обработчик печати диаграммы
+    // Логика печати диаграммы
+}
+
+void MainWindow::colorSwap()
+{
+    // Обработчик смены цвета диаграммы
+    // Логика смены цвета диаграммы
+}
+
+void MainWindow::exceptionCall(QString title, QString message)
+{
+    // Вызов диалогового окна с сообщением об ошибке
+    QMessageBox::critical(this, title, message);
+}
+
+void MainWindow::drawChart()
+{
+    // Логика рисования диаграммы
+}
