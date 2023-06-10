@@ -8,19 +8,38 @@
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 {
+    this->setGeometry(100, 100, 1000, 600);
     DirectoryPath = ""; // инициализация директории
 
     FileModel = std::make_unique<QFileSystemModel>(this); // модель файловой системы
+    FileModel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
+    DirectoryPath = QDir::currentPath();   // путь к текущему каталогу
     FileModel->setRootPath(DirectoryPath); // задание корневой директории
+    QModelIndex PathIndex = FileModel->setRootPath(DirectoryPath);
 
     TableFileView = std::make_unique<QTableView>(this); // виджет таблицы файлов
     TableFileView->setModel(FileModel.get()); // установка модели
-    TableFileView->setSelectionMode(QAbstractItemView::SingleSelection); // режим выбора одной строки
-    TableFileView->setSelectionBehavior(QAbstractItemView::SelectRows); // выделение всей строки
+    TableFileView->setRootIndex(PathIndex);
 
     ChartView = std::make_unique<QtCharts::QChartView>(this); // виджет диаграммы
+    ChartView->setRenderHint(QPainter::Antialiasing);
+
+    TableFileView->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding); // Установите вертикальный размер TableFileView
+    ChartView->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+
+    FileSplitter = std::make_unique<QSplitter>(Qt::Vertical); // разделитель для разделения проводника файлов и диаграммы
+    FileSplitter->addWidget(TableFileView.get());
+
+    ChartSplitter = std::make_unique<QSplitter>(Qt::Vertical); // разделитель для разделения диаграммы и остальных виджетов
+    ChartSplitter->addWidget(ChartView.get());
+
+    FileSplitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    ChartSplitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    WrapperLayout = std::make_unique<QHBoxLayout>(this); // главный компоновщик
 
     PathLabel = std::make_unique<QLabel>(this); // метка для отображения текущего пути
+    PathLabel->setText("Choose file");
 
     BtnPrintChart = std::make_unique<QPushButton>("Print Chart", this); // кнопка печати диаграммы
     BtnChangeDirectory = std::make_unique<QPushButton>("Change Directory", this); // кнопка смены директории в таблице
@@ -32,36 +51,22 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     ComboboxChartType->addItem("Pie Chart");
     ComboboxChartType->addItem("Line Chart");
 
-    WrapperLayout = std::make_unique<QHBoxLayout>(this); // главный компоновщик
-
     ChartWidgetLayout = std::make_unique<QHBoxLayout>(); // компоновщик для виджетов диаграммы
-    ChartWidgetLayout->addWidget(BtnPrintChart.get());
-    ChartWidgetLayout->addWidget(ChkbxBlackWhiteChart.get());
     ChartWidgetLayout->addWidget(ComboboxChartType.get());
+    ChartWidgetLayout->addWidget(ChkbxBlackWhiteChart.get());
+    ChartWidgetLayout->addWidget(BtnPrintChart.get());
 
     FileExplorerLayout = std::make_unique<QVBoxLayout>(); // компоновщик для проводника файлов
-    FileExplorerLayout->addWidget(TableFileView.get());
-    FileExplorerLayout->addWidget(BtnChangeDirectory.get());
+    FileExplorerLayout->addWidget(FileSplitter.get(), 1); // 1 - чтобы  сплиттер был во всю длину окна
+    FileExplorerLayout->addWidget(BtnChangeDirectory.get(), 0);
+    FileExplorerLayout->addWidget(PathLabel.get(), 0);
 
     ChartLayout = std::make_unique<QVBoxLayout>(); // компоновщик для диаграммы
     ChartLayout->addLayout(ChartWidgetLayout.get());
-    ChartLayout->addWidget(PathLabel.get());
-    ChartLayout->addWidget(ChartView.get());
-
-    FileSplitter = std::make_unique<QSplitter>(Qt::Horizontal); // разделитель для разделения проводника файлов и диаграммы
-    FileSplitter->addWidget(TableFileView.get());
-    FileSplitter->addWidget(BtnChangeDirectory.get());
-
-    ChartSplitter = std::make_unique<QSplitter>(Qt::Vertical); // разделитель для разделения диаграммы и остальных виджетов
-    ChartSplitter->addWidget(PathLabel.get());
-    ChartSplitter->addWidget(ChartView.get());
+    ChartLayout->addWidget(ChartSplitter.get());
 
     WrapperLayout->addLayout(FileExplorerLayout.get());
-    WrapperLayout->addWidget(ChartSplitter.get());
-
-    setLayout(WrapperLayout.get()); // установка главного компоновщика
-
-    setMinimumSize(800, 600); // установка минимального размера окна
+    WrapperLayout->addLayout(ChartLayout.get());
 
     connect(BtnChangeDirectory.get(), &QPushButton::clicked, this, &MainWindow::changeDirectory);
     connect(TableFileView.get()->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::fileSelection);
