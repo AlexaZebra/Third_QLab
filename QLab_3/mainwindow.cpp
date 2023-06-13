@@ -129,31 +129,20 @@ void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelect
     }
 
 
-    if (filePath.endsWith(".json")) {                                       // Если путь к файлу оканчивается на ".json"
-        //std::shared_ptr<IFileReader> jsonStrategy(new JsonFileReader());
-        //FileReader fileReader(jsonStrategy.get()); // Получение указателя на стратегию через метод get()
-        Container.RegisterInstance<IFileReader, JsonFileReader>();
-        auto jsonStrategy = Container.GetObject<IFileReader>();
-        FileReader fileReader(jsonStrategy);
-        fileReader.getData(filePath);
-    }
-    else if (filePath.endsWith(".sqlite")) {
-        //std::shared_ptr<IFileReader> sqlStrategy(new SqlFileReader());
-        //sqlStrategy->getData(filePath);
-        Container.RegisterInstance<IFileReader, SqlFileReader>();
-        auto sqlStrategy = Container.GetObject<IFileReader>();
-        FileReader fileReader(sqlStrategy);
-        fileReader.getData(filePath);
-    }
-    else if (filePath.isEmpty()) {
-        exceptionCall("File Error", "Selected file is empty");
-        return;
-    }
-    else {
-        exceptionCall("Wrong file format", "Please select .json or .sqlite file");
+    if (filePath.endsWith(".json"))                                 // если выбран json файл,
+        Container.RegisterInstance<IFileReader, JsonFileReader>();  // то регистрируем IFileReader как JsonFileReader
+
+    else if (filePath.endsWith(".sqlite"))                          // если выбран json файл,
+        Container.RegisterInstance<IFileReader, SqlFileReader>();   // то регистрируем IFileReader как SqlFileReader
+
+    else {                                                          // иначе если выбран другой файл,
+        exceptionCall("Wrong file format", "Please select .json or .sqlite file"); // то выдаем сообщение об ошибке
         return;
     }
 
+    auto Strategy = Container.GetObject<IFileReader>();             // получили соотвествующую стратегию через иок контейнер
+    FileReader fileReader(Strategy);                                // установили эту стратегию для чтения
+    fileReader.getData(filePath);                                   // с помощью стратегии читаем данные из выбранного файла
 }
 
 void MainWindow::changeChartType()

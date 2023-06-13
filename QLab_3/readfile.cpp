@@ -2,6 +2,7 @@
 
 bool SqlFileReader::getData(const QString& filePath)
 {
+    QSqlDatabase::removeDatabase("qt_sql_default_connection"); // Чтобы не возникала ошибка "duplicate connection name"
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");  // Создание объекта для работы с SQLite
     db.setDatabaseName(filePath);                            // Установка пути к файлу SQLite
     if (!db.open())                                          // Попытка открытия базы данных
