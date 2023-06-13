@@ -5,74 +5,90 @@
 #include <QMessageBox>
 #include <QPdfWriter>
 #include <QtCharts/QChart>
+int IOCContainer::s_nextTypeId = 1;
 
-MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-    this->setGeometry(100, 100, 1000, 600);
-    DirectoryPath = ""; // инициализация директории
+    // Создание и настройка виджетов
 
-    FileModel = std::make_unique<QFileSystemModel>(this); // модель файловой системы
+    this->setGeometry(100, 100, 1000, 600);
+    this->setMinimumSize(900, 300);
+    DirectoryPath = "";                                                  // инициализация директории
+
+    FileModel = new QFileSystemModel(this);                              // модель файловой системы
     FileModel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
-    DirectoryPath = QDir::currentPath();   // путь к текущему каталогу
-    FileModel->setRootPath(DirectoryPath); // задание корневой директории
+
+    DirectoryPath = QDir::currentPath();                                 // путь к текущему каталогу
+    FileModel->setRootPath(DirectoryPath);                               // задание корневой директории
     QModelIndex PathIndex = FileModel->setRootPath(DirectoryPath);
 
-    TableFileView = std::make_unique<QTableView>(this); // виджет таблицы файлов
-    TableFileView->setModel(FileModel.get()); // установка модели
+    TableFileView = new QTableView(this);                                // виджет таблицы файлов
+    TableFileView->setModel(FileModel);                                  // установка модели
+    TableFileView->setSelectionMode(QAbstractItemView::SingleSelection); // режим выбора одной строки
+    TableFileView->setSelectionBehavior(QAbstractItemView::SelectRows);  // выделение всей строки
     TableFileView->setRootIndex(PathIndex);
 
-    ChartView = std::make_unique<QtCharts::QChartView>(this); // виджет диаграммы
+    ChartView = new QtCharts::QChartView(this);                          // виджет диаграммы
     ChartView->setRenderHint(QPainter::Antialiasing);
 
-    TableFileView->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding); // Установите вертикальный размер TableFileView
-    ChartView->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    FileSplitter = new QSplitter(Qt::Horizontal);
+    ChartSplitter = new QSplitter();
 
-    FileSplitter = std::make_unique<QSplitter>(Qt::Vertical); // разделитель для разделения проводника файлов и диаграммы
-    FileSplitter->addWidget(TableFileView.get());
+    FileSplitter->addWidget(TableFileView);
+    FileSplitter->addWidget(ChartView);
+    //ChartSplitter->addWidget(ChartView);
+    //ChartSplitter->addWidget(TableFileView);
 
-    ChartSplitter = std::make_unique<QSplitter>(Qt::Vertical); // разделитель для разделения диаграммы и остальных виджетов
-    ChartSplitter->addWidget(ChartView.get());
+    WrapperLayout = new QHBoxLayout();                               // главный компоновщик
 
-    FileSplitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-    ChartSplitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-    WrapperLayout = std::make_unique<QHBoxLayout>(this); // главный компоновщик
-
-    PathLabel = std::make_unique<QLabel>(this); // метка для отображения текущего пути
+    PathLabel = new QLabel(this);                                        // метка для отображения текущего пути
     PathLabel->setText("Choose file");
 
-    BtnPrintChart = std::make_unique<QPushButton>("Print Chart", this); // кнопка печати диаграммы
-    BtnChangeDirectory = std::make_unique<QPushButton>("Change Directory", this); // кнопка смены директории в таблице
+    BtnPrintChart = new QPushButton("Print Chart", this);                // кнопка печати диаграммы
+    BtnChangeDirectory = new QPushButton("Change Directory", this);      // кнопка смены директории в таблице
 
-    ChkbxBlackWhiteChart = std::make_unique<QCheckBox>("Black and White Chart", this); // флажок для изменения цветов диаграммы
+    ChkbxBlackWhiteChart = new QCheckBox("Black and White Chart", this); // чекбокс для изменения цветов диаграммы
 
-    ComboboxChartType = std::make_unique<QComboBox>(this); // комбобокс для изменения типа диаграммы
+    ComboboxChartType = new QComboBox(this);                             // комбобокс для изменения типа диаграммы
     ComboboxChartType->addItem("Bar Chart");
     ComboboxChartType->addItem("Pie Chart");
     ComboboxChartType->addItem("Line Chart");
 
-    ChartWidgetLayout = std::make_unique<QHBoxLayout>(); // компоновщик для виджетов диаграммы
-    ChartWidgetLayout->addWidget(ComboboxChartType.get());
-    ChartWidgetLayout->addWidget(ChkbxBlackWhiteChart.get());
-    ChartWidgetLayout->addWidget(BtnPrintChart.get());
+    QLabel *label = new QLabel("Choose type of diagrams");
 
-    FileExplorerLayout = std::make_unique<QVBoxLayout>(); // компоновщик для проводника файлов
-    FileExplorerLayout->addWidget(FileSplitter.get(), 1); // 1 - чтобы  сплиттер был во всю длину окна
-    FileExplorerLayout->addWidget(BtnChangeDirectory.get(), 0);
-    FileExplorerLayout->addWidget(PathLabel.get(), 0);
+    QGridLayout *ChartWidgetLayout = new QGridLayout();
+    //ChartWidgetLayout = new QHBoxLayout();                               // компоновщик для виджетов диаграммы
+    ChartWidgetLayout->addWidget(label,1,0);
+    ChartWidgetLayout->addWidget(ComboboxChartType,1,1);
+    ChartWidgetLayout->addWidget(ChkbxBlackWhiteChart,1,2);
+    ChartWidgetLayout->addWidget(BtnPrintChart,1,3);
 
-    ChartLayout = std::make_unique<QVBoxLayout>(); // компоновщик для диаграммы
-    ChartLayout->addLayout(ChartWidgetLayout.get());
-    ChartLayout->addWidget(ChartSplitter.get());
 
-    WrapperLayout->addLayout(FileExplorerLayout.get());
-    WrapperLayout->addLayout(ChartLayout.get());
+    //FileExplorerLayout = new QVBoxLayout();                              // компоновщик для проводника файлов
+    //FileExplorerLayout->addWidget(FileSplitter,1);
+    //FileExplorerLayout->addWidget(BtnChangeDirectory, 0);
+    //FileExplorerLayout->addWidget(PathLabel, 0);
+    //baseLayout->addWidget(chartView, 1, 0);
 
-    connect(BtnChangeDirectory.get(), &QPushButton::clicked, this, &MainWindow::changeDirectory);
-    connect(TableFileView.get()->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::fileSelection);
-    connect(ComboboxChartType.get(), QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::changeChartType);
-    connect(BtnPrintChart.get(), &QPushButton::clicked, this, &MainWindow::printChart);
-    connect(ChkbxBlackWhiteChart.get(), &QCheckBox::toggled, this, &MainWindow::colorSwap);
+    ChartLayout = new QVBoxLayout();                                     // компоновщик для диаграммы
+    ChartLayout->addLayout(ChartWidgetLayout);
+    ChartLayout->addWidget(FileSplitter,1);
+    ChartLayout->addWidget(BtnChangeDirectory, 0);
+    ChartLayout->addWidget(PathLabel, 0);
+
+
+   // WrapperLayout->addLayout(FileExplorerLayout);
+    WrapperLayout->addLayout(ChartLayout);
+
+    QWidget* centralWidget = new QWidget(this);
+    centralWidget->setLayout(WrapperLayout);
+    setCentralWidget(centralWidget);
+
+    connect(BtnChangeDirectory, &QPushButton::clicked, this, &MainWindow::changeDirectory);
+    connect(TableFileView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::fileSelection);
+    connect(ComboboxChartType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::changeChartType);
+    connect(BtnPrintChart, &QPushButton::clicked, this, &MainWindow::printChart);
+    connect(ChkbxBlackWhiteChart, &QCheckBox::toggled, this, &MainWindow::colorSwap);
 }
 
 MainWindow::~MainWindow()
@@ -89,16 +105,55 @@ void MainWindow::changeDirectory()
         DirectoryPath = newDirectory;
         FileModel->setRootPath(DirectoryPath);
         TableFileView->setRootIndex(FileModel->index(DirectoryPath));
-        PathLabel->setText(DirectoryPath);
     }
 }
 
 void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelection &deselected)
 {
-    // Обработчик изменения выбранного файла в таблице
-    Q_UNUSED(selected);
     Q_UNUSED(deselected);
-    // Логика обработки изменения выбранного файла
+    QModelIndexList indexes = selected.indexes();               // Получаем список индексов выбранных элементов
+    QString filePath = FileModel->filePath(indexes.first());    // Получаем путь к файлу, выбранному в модели
+
+    QFile file(filePath);                                       // Создаем объект файла с указанным путем для проверки ошибок открытия/пустоты
+
+    if (!file.open(QIODevice::ReadOnly)) {                      // Если не удалось открыть файл для чтения
+        exceptionCall("File Error", "Unable to open the file"); // Вызываем функцию обработки исключения с сообщением об ошибке
+        file.close();                                           // Закрытие файла в случае ошибки открытия, чтобы избежать утечки ресурсов.
+        return;                                                 // Возвращаемся из функции
+    }
+
+    if (file.size() == 0) {                                         // Проверка размера файла
+        exceptionCall("Empty File", "The selected file is empty");  // Файл пустой, обработка исключения
+        file.close();
+        return;
+    }
+
+
+    if (filePath.endsWith(".json")) {                                       // Если путь к файлу оканчивается на ".json"
+        //std::shared_ptr<IFileReader> jsonStrategy(new JsonFileReader());
+        //FileReader fileReader(jsonStrategy.get()); // Получение указателя на стратегию через метод get()
+        Container.RegisterInstance<IFileReader, JsonFileReader>();
+        auto jsonStrategy = Container.GetObject<IFileReader>();
+        FileReader fileReader(jsonStrategy);
+        fileReader.getData(filePath);
+    }
+    else if (filePath.endsWith(".sqlite")) {
+        //std::shared_ptr<IFileReader> sqlStrategy(new SqlFileReader());
+        //sqlStrategy->getData(filePath);
+        Container.RegisterInstance<IFileReader, SqlFileReader>();
+        auto sqlStrategy = Container.GetObject<IFileReader>();
+        FileReader fileReader(sqlStrategy);
+        fileReader.getData(filePath);
+    }
+    else if (filePath.isEmpty()) {
+        exceptionCall("File Error", "Selected file is empty");
+        return;
+    }
+    else {
+        exceptionCall("Wrong file format", "Please select .json or .sqlite file");
+        return;
+    }
+
 }
 
 void MainWindow::changeChartType()

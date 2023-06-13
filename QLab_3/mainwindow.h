@@ -1,5 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+#include"IOCContainer.h"
+#include"readfile.h"
 
 #include <QMainWindow>
 #include <QHBoxLayout>
@@ -20,7 +22,7 @@
 #include <memory>
 
 
-class MainWindow : public QWidget
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
@@ -40,21 +42,24 @@ public:
 
 private:
     //std::unique_ptr<Ui::MainWindow> ui;
-    QString  DirectoryPath;                             // путь к текущему каталогу
-    std::unique_ptr<QFileSystemModel> FileModel;        // модель файловой системы
-    std::unique_ptr<QTableView> TableFileView;          // виджет для отображения файловой системы в виде таблицы
-    std::unique_ptr<QtCharts::QChartView> ChartView;    // виджет для отображения диаграммы
-    std::unique_ptr<QLabel> PathLabel;                  // метка, отображающая текущий путь
-    std::unique_ptr<QPushButton> BtnPrintChart;         // кнопка для печати диаграммы
-    std::unique_ptr<QPushButton> BtnChangeDirectory;    // кнопка для изменения текущего каталога в таблице
-    std::unique_ptr<QCheckBox> ChkbxBlackWhiteChart;    // флажок для изменения цветов диаграммы
-    std::unique_ptr<QComboBox> ComboboxChartType;       // выпадающий список для изменения типа диаграммы
-    std::unique_ptr<QHBoxLayout> WrapperLayout;         // внешняя компоновка
-    std::unique_ptr<QVBoxLayout> FileExplorerLayout;    // компоновка для проводника файловой системы и его виджетов
-    std::unique_ptr<QVBoxLayout> ChartLayout;           // компоновка для диаграммы и ее виджетов
-    std::unique_ptr<QHBoxLayout> ChartWidgetLayout;     // компоновка виджетов диаграммы
-    std::unique_ptr<QSplitter> FileSplitter;            // разделитель для разделения виджета таблицы и проводника файловой системы
-    std::unique_ptr<QSplitter> ChartSplitter;           // разделитель для разделения виджета диаграммы
+
+    QString DirectoryPath; // путь к текущему каталогу
+    QFileSystemModel* FileModel; // модель файловой системы
+    QTableView* TableFileView; // виджет для отображения файловой системы в виде таблицы
+    QtCharts::QChartView* ChartView; // виджет для отображения диаграммы
+    QLabel* PathLabel; // метка, отображающая текущий путь
+    QPushButton* BtnPrintChart; // кнопка для печати диаграммы
+    QPushButton* BtnChangeDirectory; // кнопка для изменения текущего каталога в таблице
+    QCheckBox* ChkbxBlackWhiteChart; // флажок для изменения цветов диаграммы
+    QComboBox* ComboboxChartType; // выпадающий список для изменения типа диаграммы
+    QHBoxLayout* WrapperLayout; // внешняя компоновка
+    QVBoxLayout* FileExplorerLayout; // компоновка для проводника файловой системы и его виджетов
+    QVBoxLayout* ChartLayout; // компоновка для диаграммы и ее виджетов
+    //QHBoxLayout* ChartWidgetLayout; // компоновка виджетов диаграммы
+    QSplitter* FileSplitter; // разделитель для разделения виджета таблицы и проводника файловой системы
+    QSplitter* ChartSplitter; // разделитель для разделения виджета диаграммы
+
+    IOCContainer Container;
 
     bool isChartActive = false;                         //переменная хранящая активность графика
 

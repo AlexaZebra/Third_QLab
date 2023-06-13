@@ -2,7 +2,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += charts
-
+QT += sql
 CONFIG += c++17
 
 # You can make your code fail to compile if it uses deprecated APIs.
@@ -11,7 +11,8 @@ CONFIG += c++17
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+        readfile.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -20,7 +21,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     IOCContainer.h \
-    mainwindow.h
+    mainwindow.h \
+    readfile.h
 
 FORMS += \
     mainwindow.ui
