@@ -1,0 +1,164 @@
+#include "mainwindow.h"
+
+#include <QFileDialog>
+#include <QtCharts/QChartView>
+#include <QMessageBox>
+#include <QPdfWriter>
+#include <QtCharts/QChart>
+int IOCContainer::s_nextTypeId = 1;
+
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
+{
+    // Создание и настройка виджетов
+
+    this->setGeometry(100, 100, 1280, 720);
+    this->setMinimumSize(900, 300);
+    DirectoryPath = "";                                                  // инициализация директории
+
+    FileModel = new QFileSystemModel(this);                              // модель файловой системы
+    FileModel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
+
+    DirectoryPath = QDir::currentPath();                                 // путь к текущему каталогу
+    FileModel->setRootPath(DirectoryPath);                               // задание корневой директории
+    QModelIndex PathIndex = FileModel->setRootPath(DirectoryPath);
+
+    TableFileView = new QTableView(this);                                // виджет таблицы файлов
+    TableFileView->setModel(FileModel);                                  // установка модели
+    TableFileView->setSelectionMode(QAbstractItemView::SingleSelection); // режим выбора одной строки
+    TableFileView->setSelectionBehavior(QAbstractItemView::SelectRows);  // выделение всей строки
+    TableFileView->setRootIndex(PathIndex);
+
+    ChartView = new QtCharts::QChartView(this);                          // виджет диаграммы
+    ChartView->setRenderHint(QPainter::Antialiasing);
+
+    Splitter = new QSplitter();
+
+    Splitter->addWidget(TableFileView);
+    Splitter->addWidget(ChartView);
+
+    // Установка размеров виджетов в QSplitter
+    QList<int> sizes;
+    sizes << 1 << 1;
+    Splitter->setSizes(sizes);
+
+    PathLabel = new QLabel(this);                                        // метка для отображения текущего пути
+    PathLabel->setText("Выберите файл");
+
+    BtnPrintChart = new QPushButton("Печать", this);                     // кнопка печати диаграммы
+    BtnChangeDirectory = new QPushButton("Выбрать папку", this);         // кнопка смены директории в таблице
+
+    ChkbxBlackWhiteChart = new QCheckBox("ч/б график", this);            // чекбокс для изменения цветов диаграммы
+
+    ComboboxChartType = new QComboBox(this);                             // комбобокс для изменения типа диаграммы
+    ComboboxChartType->addItem("Столбчатая");
+    ComboboxChartType->addItem("Круговая");
+    ComboboxChartType->addItem("Линейная");
+
+    QLabel *label = new QLabel("Выбирите тип диаграммы");
+
+    QGridLayout *ChartWidgetLayout = new QGridLayout();                  // компоновщик для виджетов диаграммы и кнопки выбора папки
+    ChartWidgetLayout->addWidget(BtnChangeDirectory,1,0);
+    ChartWidgetLayout->addWidget(label,1,1);
+    ChartWidgetLayout->addWidget(ComboboxChartType,1,2);
+    ChartWidgetLayout->addWidget(ChkbxBlackWhiteChart,1,3);
+    ChartWidgetLayout->addWidget(BtnPrintChart,1,4);
+
+    ChartLayout = new QVBoxLayout();                                     // главный компоновщик
+    ChartLayout->addLayout(ChartWidgetLayout);
+    ChartLayout->addWidget(Splitter,1);
+    ChartLayout->addWidget(PathLabel, 0);
+
+
+    QWidget* centralWidget = new QWidget(this);
+    centralWidget->setLayout(ChartLayout);
+    setCentralWidget(centralWidget);
+
+    connect(BtnChangeDirectory, &QPushButton::clicked, this, &MainWindow::changeDirectory);
+    connect(TableFileView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::fileSelection);
+    connect(ComboboxChartType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::changeChartType);
+    connect(BtnPrintChart, &QPushButton::clicked, this, &MainWindow::printChart);
+    connect(ChkbxBlackWhiteChart, &QCheckBox::toggled, this, &MainWindow::colorSwap);
+}
+
+MainWindow::~MainWindow()
+{
+    // Освобождение ресурсов
+}
+
+void MainWindow::changeDirectory()
+{
+    // Обработчик смены директории
+    QString newDirectory = QFileDialog::getExistingDirectory(this, "Выбор папки", DirectoryPath);
+    if (!newDirectory.isEmpty())
+    {
+        DirectoryPath = newDirectory;
+        FileModel->setRootPath(DirectoryPath);
+        TableFileView->setRootIndex(FileModel->index(DirectoryPath));
+    }
+}
+
+void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelection &deselected)
+{
+    Q_UNUSED(deselected);
+    QModelIndexList indexes = selected.indexes();               // Получаем список индексов выбранных элементов
+    QString filePath = FileModel->filePath(indexes.first());    // Получаем путь к файлу, выбранному в модели
+
+    QFile file(filePath);                                       // Создаем объект файла с указанным путем для проверки ошибок открытия/пустоты
+
+    if (!file.open(QIODevice::ReadOnly)) {                      // Если не удалось открыть файл для чтения
+        exceptionCall("Ошибка", "Невозможно открыть файл"); // Вызываем функцию обработки исключения с сообщением об ошибке
+        file.close();                                           // Закрытие файла в случае ошибки открытия, чтобы избежать утечки ресурсов.
+        return;                                                 // Возвращаемся из функции
+    }
+
+    if (file.size() == 0) {                                         // Проверка размера файла
+        exceptionCall("Пустой файл", "Выбранный файл пустой");  // Файл пустой, обработка исключения
+        file.close();
+        return;
+    }
+
+
+    if (filePath.endsWith(".json"))                                 // если выбран json файл,
+        Container.RegisterInstance<IFileReader, JsonFileReader>();  // то регистрируем IFileReader как JsonFileReader
+
+    else if (filePath.endsWith(".sqlite"))                          // если выбран json файл,
+        Container.RegisterInstance<IFileReader, SqlFileReader>();   // то регистрируем IFileReader как SqlFileReader
+
+    else {                                                          // иначе если выбран другой файл,
+        exceptionCall("Неверный формат файла", "Пожалуйста, выберите .json или .sqlite файл"); // то выдаем сообщение об ошибке
+        return;
+    }
+
+    auto Strategy = Container.GetObject<IFileReader>();             // получили соотвествующую стратегию через иок контейнер
+    FileReader fileReader(Strategy);                                // установили эту стратегию для чтения
+    fileReader.getData(filePath);                                   // с помощью стратегии читаем данные из выбранного файла
+}
+
+void MainWindow::changeChartType()
+{
+    // Обработчик изменения типа диаграммы
+    // Логика изменения типа диаграммы
+}
+
+void MainWindow::printChart()
+{
+    // Обработчик печати диаграммы
+    // Логика печати диаграммы
+}
+
+void MainWindow::colorSwap()
+{
+    // Обработчик смены цвета диаграммы
+    // Логика смены цвета диаграммы
+}
+
+void MainWindow::exceptionCall(QString title, QString message)
+{
+    // Вызов диалогового окна с сообщением об ошибке
+    QMessageBox::critical(this, title, message);
+}
+
+void MainWindow::drawChart()
+{
+    // Логика рисования диаграммы
+}
