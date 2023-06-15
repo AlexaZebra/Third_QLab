@@ -41,23 +41,18 @@ public:
     ~MainWindow();
 
 private:
-    //std::unique_ptr<Ui::MainWindow> ui;
-
-    QString DirectoryPath; // путь к текущему каталогу
-    QFileSystemModel* FileModel; // модель файловой системы
-    QTableView* TableFileView; // виджет для отображения файловой системы в виде таблицы
-    QtCharts::QChartView* ChartView; // виджет для отображения диаграммы
-    QLabel* PathLabel; // метка, отображающая текущий путь
-    QPushButton* BtnPrintChart; // кнопка для печати диаграммы
-    QPushButton* BtnChangeDirectory; // кнопка для изменения текущего каталога в таблице
-    QCheckBox* ChkbxBlackWhiteChart; // флажок для изменения цветов диаграммы
-    QComboBox* ComboboxChartType; // выпадающий список для изменения типа диаграммы
-    QHBoxLayout* WrapperLayout; // внешняя компоновка
-    QVBoxLayout* FileExplorerLayout; // компоновка для проводника файловой системы и его виджетов
-    QVBoxLayout* ChartLayout; // компоновка для диаграммы и ее виджетов
-    //QHBoxLayout* ChartWidgetLayout; // компоновка виджетов диаграммы
-    QSplitter* FileSplitter; // разделитель для разделения виджета таблицы и проводника файловой системы
-    QSplitter* ChartSplitter; // разделитель для разделения виджета диаграммы
+    QString DirectoryPath;          // путь к текущему каталогу
+    QFileSystemModel* FileModel;    // модель файловой системы
+    QTableView* TableFileView;      // виджет для отображения файловой системы в виде таблицы
+    QtCharts::QChartView* ChartView;// виджет для отображения диаграммы
+    QLabel* PathLabel;              // метка, отображающая текущий путь
+    QPushButton* BtnPrintChart;     // кнопка для печати диаграммы
+    QPushButton* BtnChangeDirectory;// кнопка для изменения текущего каталога в таблице
+    QCheckBox* ChkbxBlackWhiteChart;// флажок для изменения цветов диаграммы
+    QComboBox* ComboboxChartType;   // выпадающий список для изменения типа диаграммы
+    QVBoxLayout* ChartLayout;       // компоновка для диаграммы и ее виджетов
+    QGridLayout *ChartWidgetLayout; // компоновка виджетов диаграммы
+    QSplitter* Splitter;            // разделитель для разделения виджета таблицы и проводника файловой системы
 
     IOCContainer Container;
 

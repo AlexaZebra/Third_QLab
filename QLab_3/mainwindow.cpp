@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     // Создание и настройка виджетов
 
-    this->setGeometry(100, 100, 1000, 600);
+    this->setGeometry(100, 100, 1280, 720);
     this->setMinimumSize(900, 300);
     DirectoryPath = "";                                                  // инициализация директории
 
@@ -31,57 +31,46 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ChartView = new QtCharts::QChartView(this);                          // виджет диаграммы
     ChartView->setRenderHint(QPainter::Antialiasing);
 
-    FileSplitter = new QSplitter(Qt::Horizontal);
-    ChartSplitter = new QSplitter();
+    Splitter = new QSplitter();
 
-    FileSplitter->addWidget(TableFileView);
-    FileSplitter->addWidget(ChartView);
-    //ChartSplitter->addWidget(ChartView);
-    //ChartSplitter->addWidget(TableFileView);
+    Splitter->addWidget(TableFileView);
+    Splitter->addWidget(ChartView);
 
-    WrapperLayout = new QHBoxLayout();                               // главный компоновщик
+    // Установка размеров виджетов в QSplitter
+    QList<int> sizes;
+    sizes << 1 << 1;
+    Splitter->setSizes(sizes);
 
     PathLabel = new QLabel(this);                                        // метка для отображения текущего пути
-    PathLabel->setText("Choose file");
+    PathLabel->setText("Выберите файл");
 
-    BtnPrintChart = new QPushButton("Print Chart", this);                // кнопка печати диаграммы
-    BtnChangeDirectory = new QPushButton("Change Directory", this);      // кнопка смены директории в таблице
+    BtnPrintChart = new QPushButton("Печать", this);                     // кнопка печати диаграммы
+    BtnChangeDirectory = new QPushButton("Выбрать папку", this);         // кнопка смены директории в таблице
 
-    ChkbxBlackWhiteChart = new QCheckBox("Black and White Chart", this); // чекбокс для изменения цветов диаграммы
+    ChkbxBlackWhiteChart = new QCheckBox("ч/б график", this);            // чекбокс для изменения цветов диаграммы
 
     ComboboxChartType = new QComboBox(this);                             // комбобокс для изменения типа диаграммы
-    ComboboxChartType->addItem("Bar Chart");
-    ComboboxChartType->addItem("Pie Chart");
-    ComboboxChartType->addItem("Line Chart");
+    ComboboxChartType->addItem("Столбчатая");
+    ComboboxChartType->addItem("Круговая");
+    ComboboxChartType->addItem("Линейная");
 
-    QLabel *label = new QLabel("Choose type of diagrams");
+    QLabel *label = new QLabel("Выбирите тип диаграммы");
 
-    QGridLayout *ChartWidgetLayout = new QGridLayout();
-    //ChartWidgetLayout = new QHBoxLayout();                               // компоновщик для виджетов диаграммы
-    ChartWidgetLayout->addWidget(label,1,0);
-    ChartWidgetLayout->addWidget(ComboboxChartType,1,1);
-    ChartWidgetLayout->addWidget(ChkbxBlackWhiteChart,1,2);
-    ChartWidgetLayout->addWidget(BtnPrintChart,1,3);
+    QGridLayout *ChartWidgetLayout = new QGridLayout();                  // компоновщик для виджетов диаграммы и кнопки выбора папки
+    ChartWidgetLayout->addWidget(BtnChangeDirectory,1,0);
+    ChartWidgetLayout->addWidget(label,1,1);
+    ChartWidgetLayout->addWidget(ComboboxChartType,1,2);
+    ChartWidgetLayout->addWidget(ChkbxBlackWhiteChart,1,3);
+    ChartWidgetLayout->addWidget(BtnPrintChart,1,4);
 
-
-    //FileExplorerLayout = new QVBoxLayout();                              // компоновщик для проводника файлов
-    //FileExplorerLayout->addWidget(FileSplitter,1);
-    //FileExplorerLayout->addWidget(BtnChangeDirectory, 0);
-    //FileExplorerLayout->addWidget(PathLabel, 0);
-    //baseLayout->addWidget(chartView, 1, 0);
-
-    ChartLayout = new QVBoxLayout();                                     // компоновщик для диаграммы
+    ChartLayout = new QVBoxLayout();                                     // главный компоновщик
     ChartLayout->addLayout(ChartWidgetLayout);
-    ChartLayout->addWidget(FileSplitter,1);
-    ChartLayout->addWidget(BtnChangeDirectory, 0);
+    ChartLayout->addWidget(Splitter,1);
     ChartLayout->addWidget(PathLabel, 0);
 
 
-   // WrapperLayout->addLayout(FileExplorerLayout);
-    WrapperLayout->addLayout(ChartLayout);
-
     QWidget* centralWidget = new QWidget(this);
-    centralWidget->setLayout(WrapperLayout);
+    centralWidget->setLayout(ChartLayout);
     setCentralWidget(centralWidget);
 
     connect(BtnChangeDirectory, &QPushButton::clicked, this, &MainWindow::changeDirectory);
@@ -99,7 +88,7 @@ MainWindow::~MainWindow()
 void MainWindow::changeDirectory()
 {
     // Обработчик смены директории
-    QString newDirectory = QFileDialog::getExistingDirectory(this, "Choose Directory", DirectoryPath);
+    QString newDirectory = QFileDialog::getExistingDirectory(this, "Выбор папки", DirectoryPath);
     if (!newDirectory.isEmpty())
     {
         DirectoryPath = newDirectory;
@@ -117,13 +106,13 @@ void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelect
     QFile file(filePath);                                       // Создаем объект файла с указанным путем для проверки ошибок открытия/пустоты
 
     if (!file.open(QIODevice::ReadOnly)) {                      // Если не удалось открыть файл для чтения
-        exceptionCall("File Error", "Unable to open the file"); // Вызываем функцию обработки исключения с сообщением об ошибке
+        exceptionCall("Ошибка", "Невозможно открыть файл"); // Вызываем функцию обработки исключения с сообщением об ошибке
         file.close();                                           // Закрытие файла в случае ошибки открытия, чтобы избежать утечки ресурсов.
         return;                                                 // Возвращаемся из функции
     }
 
     if (file.size() == 0) {                                         // Проверка размера файла
-        exceptionCall("Empty File", "The selected file is empty");  // Файл пустой, обработка исключения
+        exceptionCall("Пустой файл", "Выбранный файл пустой");  // Файл пустой, обработка исключения
         file.close();
         return;
     }
@@ -136,7 +125,7 @@ void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelect
         Container.RegisterInstance<IFileReader, SqlFileReader>();   // то регистрируем IFileReader как SqlFileReader
 
     else {                                                          // иначе если выбран другой файл,
-        exceptionCall("Wrong file format", "Please select .json or .sqlite file"); // то выдаем сообщение об ошибке
+        exceptionCall("Неверный формат файла", "Пожалуйста, выберите .json или .sqlite файл"); // то выдаем сообщение об ошибке
         return;
     }
 
