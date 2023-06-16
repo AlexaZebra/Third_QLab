@@ -27,3 +27,15 @@ void PieChart::createSeries(QList<QPair<QString, qfloat16>> list, QtCharts::QCha
     }
     ChartView->chart()->addSeries(series.release());
 }
+
+void LineChart::setupTitle(QtCharts::QChartView* ChartView){
+    ChartView->chart()->setTitle("Линейная диаграмма");
+}
+
+void LineChart::createSeries(QList<QPair<QString, qfloat16>> list, QtCharts::QChartView* ChartView) {
+    std::unique_ptr<QtCharts::QLineSeries> series =  std::make_unique<QtCharts::QLineSeries>();
+    for (int i = 0; i < list.count(); i++) {
+        series->append(i, list.at(i).second);
+    }
+    ChartView->chart()->addSeries(series.release());
+}

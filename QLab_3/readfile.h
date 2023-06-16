@@ -10,7 +10,6 @@
 // Интерфейс стратегии для чтения файлов
 class IFileReader {
 public:
-    //virtual bool getData(const QString& filePath) = 0;  // Виртуальный метод чтения файла
     virtual ~IFileReader() = default;                   // Виртуальный деструктор
     virtual QList<QPair<QString, qfloat16>> getData(const QString& filePath) = 0;// Извлекает данные типа ключ-значение из указанного файла
 

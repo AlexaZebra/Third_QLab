@@ -1,4 +1,5 @@
 #include "readfile.h"
+#include<iostream>
 
 QList<QPair<QString, qfloat16>> SqlFileReader::getData(const QString& filePath)
 {
@@ -8,14 +9,14 @@ QList<QPair<QString, qfloat16>> SqlFileReader::getData(const QString& filePath)
     QList<QPair<QString, qfloat16>> result;
     if (db.open()) {                                         // Попытка открытия базы данных
         // Создание объекта запроса к базе данных SQLite, который выбирает все столбцы из первой таблицы и ограничивает результат до 10 строк
-        QSqlQuery query ("SELECT * FROM " + db.tables().takeFirst() + " LIMIT 0,10");
+        int k = 10;
+        QSqlQuery query ("SELECT * FROM " + db.tables().takeFirst() + " LIMIT 0," + QString::number(k));
 
-
-        // Перебор результатов запроса. Вывод значений первого и второго столбцов (индексы 0 и 1) каждой строки с помощью qDebug()
+        // Перебор результатов запроса. Запись значений первого и второго столбцов (индексы 0 и 1) каждой строки в result
         while (query.next()) {
             QPair<QString,qfloat16> temp{query.value(0).toString(), query.value(1).toDouble()};
             result.push_back(temp);
-            qDebug() << query.value(0).toString() << query.value(1).toDouble();
+            //qDebug() << query.value(0).toString() << query.value(1).toDouble();
         }
 
         db.close();                                             // Закрытие базы данных
@@ -29,7 +30,6 @@ QList<QPair<QString, qfloat16>> JsonFileReader::getData(const QString& filePath)
     QFile file(filePath);                                   // Создание объекта файла
     QList<QPair<QString, qfloat16>> result;
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)){  // Открытие файла в режиме чтения
-        //return false;                                       // В случае ошибки открытия файла возвращается false
 
         QByteArray jsonData = file.readAll();                   // Чтение содержимого файла
         file.close();                                           // Закрытие файла
@@ -45,11 +45,11 @@ QList<QPair<QString, qfloat16>> JsonFileReader::getData(const QString& filePath)
             double value = jsonObj.value(key).toDouble();       // Получение значения по ключу и преобразование его в тип double
             QPair<QString,qfloat16> temp{key, value};
             result.push_back(temp);
-            qDebug() << key << value;                           // Вывод ключа и значения с помощью qDebug()
+            //qDebug() << key << value;                         // Вывод ключа и значения с помощью qDebug()
             i++;                                                // Увеличение счетчика, чтобы ограничить вывод 10-ю парами ключ-значение
         }
     }
-    return result;                                            // В случае успешного чтения файла возвращается true
+    return result;
 }
 
 void FileReader::setStrategy(std::shared_ptr<IFileReader> strategy)
@@ -59,8 +59,5 @@ void FileReader::setStrategy(std::shared_ptr<IFileReader> strategy)
 
 QList<QPair<QString, qfloat16>> FileReader::getData(const QString& filePath)
 {
-    if (strategy)                               // Если стратегия существует
-        return strategy->getData(filePath);     // Вызываем метод getData на стратегии чтения файла
-
-    //return false;                               // Возвращаем false, если стратегия не существует
+    return strategy->getData(filePath);     // Вызываем метод getData на стратегии чтения файла
 }

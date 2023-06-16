@@ -9,6 +9,7 @@
 #include <QtCharts/QBarSet>
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QPieSlice>
+#include <QtCharts/QLineSeries>
 
 
 
@@ -51,4 +52,11 @@ protected:
     void setupTitle(QtCharts::QChartView* ChartView)override;
 };
 
+class LineChart: public Chart {
+public:
+    ~LineChart() override = default;
+protected:
+    void createSeries(QList<QPair<QString, qfloat16>> data, QtCharts::QChartView* ChartView)override;
+    void setupTitle(QtCharts::QChartView* ChartView)override;
+};
 #endif // CHART_H

@@ -56,13 +56,10 @@ private:
     QSplitter* Splitter;            // разделитель для разделения виджета таблицы и проводника файловой системы
 
     IOCContainer Container;
-
-    QList<QPair<QString, qfloat16>> fileData;
-    bool isChartActive = false;                         //переменная хранящая активность графика
-    // строка хранящая путь до файла
-        QString filePath;
+    QList<QPair<QString, qfloat16>> fileData;           // список хранящий данные файла
+    bool isChartActive = false;                         // переменная хранящая активность графика
+    QString filePath;                                   // строка хранящая путь до файла
 
     void exceptionCall(QString title, QString message); // вызов messagebox
-    void drawChart(); // рисовка графика
 };
 #endif // MAINWINDOW_H

@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 
+#include <QGraphicsColorizeEffect>
+#include <QGraphicsOpacityEffect>
 #include <QFileDialog>
 #include <QtCharts/QChartView>
 #include <QMessageBox>
@@ -90,10 +92,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(ChkbxBlackWhiteChart, &QCheckBox::toggled, this, &MainWindow::colorSwap);
 }
 
-MainWindow::~MainWindow()
-{
-    // Освобождение ресурсов
-}
+MainWindow::~MainWindow(){}
 
 void MainWindow::changeDirectory()
 {
@@ -123,6 +122,7 @@ void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelect
 
     if (file.size() == 0) {                                     // Проверка размера файла
         exceptionCall("Пустой файл", "Выбранный файл пустой");  // Файл пустой, обработка исключения
+        isChartActive = false;
         file.close();
         return;
     }
@@ -136,6 +136,7 @@ void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelect
 
     else {                                                          // иначе если выбран другой файл,
         exceptionCall("Неверный формат файла", "Пожалуйста, выберите .json или .sqlite файл"); // то выдаем сообщение об ошибке
+        isChartActive = false;
         return;
     }
 
@@ -153,12 +154,20 @@ void MainWindow::changeChartType()
     // Определяем тип диаграммы на основе выбранного значения в ComboBox
     if (ComboboxChartType->currentText()  == "Столбчатая") {
         Container.RegisterInstance<Chart, BarChart>();
-        Container.GetObject<Chart>()->createChart(fileData,ChartView);
+        isChartActive = true;
     }
     else if (ComboboxChartType->currentText() == "Круговая") {
         Container.RegisterInstance<Chart, PieChart>();
-        Container.GetObject<Chart>()->createChart(fileData,ChartView);
+        isChartActive = true;
     }
+    else if (ComboboxChartType->currentText() == "Линейная") {
+        Container.RegisterInstance<Chart, LineChart>();
+        isChartActive = true;
+    }
+    // Рисуем график
+   if (isChartActive) {
+       Container.GetObject<Chart>()->createChart(fileData,ChartView);
+   }
 }
 
 void MainWindow::printChart()
@@ -170,7 +179,16 @@ void MainWindow::printChart()
 void MainWindow::colorSwap()
 {
     // Обработчик смены цвета диаграммы
-    // Логика смены цвета диаграммы
+    if (ChkbxBlackWhiteChart->isChecked()) {
+        // Установить черно-белый эффект для диаграммы как при печати
+        QGraphicsColorizeEffect* colorizeEffect = new QGraphicsColorizeEffect;
+        colorizeEffect->setEnabled(true);
+        colorizeEffect->setColor(Qt::black);
+        ChartView->chart()->setGraphicsEffect(colorizeEffect);
+    } else {
+        // Отключить эффекты для возврата исходных цветов диаграммы
+        ChartView->chart()->setGraphicsEffect(nullptr);
+    }
 }
 
 void MainWindow::exceptionCall(QString title, QString message)
