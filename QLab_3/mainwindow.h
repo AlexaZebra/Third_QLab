@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 #include"IOCContainer.h"
 #include"readfile.h"
+#include "chart.h"
 
 #include <QMainWindow>
 #include <QHBoxLayout>
@@ -56,7 +57,10 @@ private:
 
     IOCContainer Container;
 
+    QList<QPair<QString, qfloat16>> fileData;
     bool isChartActive = false;                         //переменная хранящая активность графика
+    // строка хранящая путь до файла
+        QString filePath;
 
     void exceptionCall(QString title, QString message); // вызов messagebox
     void drawChart(); // рисовка графика

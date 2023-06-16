@@ -22,6 +22,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     FileModel->setRootPath(DirectoryPath);                               // задание корневой директории
     QModelIndex PathIndex = FileModel->setRootPath(DirectoryPath);
 
+    QStringList formats;                                                 // допустимые форматы
+    formats << "sqlite" << "json";
+    QStringList filters;                                                 // фильтр с допустимыми форматами
+    for (const QString& format : qAsConst(formats)) {
+        filters.append(QString("*.%1").arg(format));
+    }
+
+    FileModel->setNameFilters(filters);                                  // применяем данный фильтр
+    FileModel->setNameFilterDisables(false);
+
     TableFileView = new QTableView(this);                                // виджет таблицы файлов
     TableFileView->setModel(FileModel);                                  // установка модели
     TableFileView->setSelectionMode(QAbstractItemView::SingleSelection); // режим выбора одной строки
@@ -29,19 +39,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     TableFileView->setRootIndex(PathIndex);
 
     ChartView = new QtCharts::QChartView(this);                          // виджет диаграммы
-    ChartView->setRenderHint(QPainter::Antialiasing);
 
     Splitter = new QSplitter();
 
     Splitter->addWidget(TableFileView);
     Splitter->addWidget(ChartView);
 
-    // Установка размеров виджетов в QSplitter
+                                                                         // Установка размеров виджетов в QSplitter
     QList<int> sizes;
     sizes << 1 << 1;
     Splitter->setSizes(sizes);
 
-    PathLabel = new QLabel(this);                                        // метка для отображения текущего пути
+    PathLabel = new QLabel(this);                                        // метка для инструкции, что делать
     PathLabel->setText("Выберите файл");
 
     BtnPrintChart = new QPushButton("Печать", this);                     // кнопка печати диаграммы
@@ -75,7 +84,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     connect(BtnChangeDirectory, &QPushButton::clicked, this, &MainWindow::changeDirectory);
     connect(TableFileView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::fileSelection);
-    connect(ComboboxChartType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::changeChartType);
+    connect(TableFileView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::changeChartType);
+    connect(ComboboxChartType, &QComboBox::currentTextChanged, this, &MainWindow::changeChartType);
     connect(BtnPrintChart, &QPushButton::clicked, this, &MainWindow::printChart);
     connect(ChkbxBlackWhiteChart, &QCheckBox::toggled, this, &MainWindow::colorSwap);
 }
@@ -101,17 +111,17 @@ void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelect
 {
     Q_UNUSED(deselected);
     QModelIndexList indexes = selected.indexes();               // Получаем список индексов выбранных элементов
-    QString filePath = FileModel->filePath(indexes.first());    // Получаем путь к файлу, выбранному в модели
+    filePath = FileModel->filePath(indexes.first());            // Получаем путь к файлу, выбранному в модели
 
     QFile file(filePath);                                       // Создаем объект файла с указанным путем для проверки ошибок открытия/пустоты
 
     if (!file.open(QIODevice::ReadOnly)) {                      // Если не удалось открыть файл для чтения
-        exceptionCall("Ошибка", "Невозможно открыть файл"); // Вызываем функцию обработки исключения с сообщением об ошибке
+        exceptionCall("Ошибка", "Невозможно открыть файл");     // Вызываем функцию обработки исключения с сообщением об ошибке
         file.close();                                           // Закрытие файла в случае ошибки открытия, чтобы избежать утечки ресурсов.
         return;                                                 // Возвращаемся из функции
     }
 
-    if (file.size() == 0) {                                         // Проверка размера файла
+    if (file.size() == 0) {                                     // Проверка размера файла
         exceptionCall("Пустой файл", "Выбранный файл пустой");  // Файл пустой, обработка исключения
         file.close();
         return;
@@ -131,13 +141,24 @@ void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelect
 
     auto Strategy = Container.GetObject<IFileReader>();             // получили соотвествующую стратегию через иок контейнер
     FileReader fileReader(Strategy);                                // установили эту стратегию для чтения
-    fileReader.getData(filePath);                                   // с помощью стратегии читаем данные из выбранного файла
+    fileData = fileReader.getData(filePath);                        // с помощью стратегии читаем данные из выбранного файла
 }
+
+
 
 void MainWindow::changeChartType()
 {
     // Обработчик изменения типа диаграммы
-    // Логика изменения типа диаграммы
+
+    // Определяем тип диаграммы на основе выбранного значения в ComboBox
+    if (ComboboxChartType->currentText()  == "Столбчатая") {
+        Container.RegisterInstance<Chart, BarChart>();
+        Container.GetObject<Chart>()->createChart(fileData,ChartView);
+    }
+    else if (ComboboxChartType->currentText() == "Круговая") {
+        Container.RegisterInstance<Chart, PieChart>();
+        Container.GetObject<Chart>()->createChart(fileData,ChartView);
+    }
 }
 
 void MainWindow::printChart()
@@ -156,9 +177,4 @@ void MainWindow::exceptionCall(QString title, QString message)
 {
     // Вызов диалогового окна с сообщением об ошибке
     QMessageBox::critical(this, title, message);
-}
-
-void MainWindow::drawChart()
-{
-    // Логика рисования диаграммы
 }
