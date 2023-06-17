@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 
+#include <QBrush>
 #include <QGraphicsColorizeEffect>
-#include <QGraphicsOpacityEffect>
 #include <QFileDialog>
 #include <QtCharts/QChartView>
 #include <QMessageBox>
@@ -40,20 +40,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     TableFileView->setSelectionBehavior(QAbstractItemView::SelectRows);  // выделение всей строки
     TableFileView->setRootIndex(PathIndex);
 
-    ChartView = new QtCharts::QChartView(this);                          // виджет диаграммы
+    ChartView = std::make_unique<QtCharts::QChartView>(this);                          // виджет диаграммы
 
     Splitter = new QSplitter();
 
     Splitter->addWidget(TableFileView);
-    Splitter->addWidget(ChartView);
+    Splitter->addWidget(ChartView.get());
 
                                                                          // Установка размеров виджетов в QSplitter
     QList<int> sizes;
     sizes << 1 << 1;
     Splitter->setSizes(sizes);
-
-    PathLabel = new QLabel(this);                                        // метка для инструкции, что делать
-    PathLabel->setText("Выберите файл");
 
     BtnPrintChart = new QPushButton("Печать", this);                     // кнопка печати диаграммы
     BtnChangeDirectory = new QPushButton("Выбрать папку", this);         // кнопка смены директории в таблице
@@ -77,7 +74,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     ChartLayout = new QVBoxLayout();                                     // главный компоновщик
     ChartLayout->addLayout(ChartWidgetLayout);
     ChartLayout->addWidget(Splitter,1);
-    ChartLayout->addWidget(PathLabel, 0);
 
 
     QWidget* centralWidget = new QWidget(this);
@@ -123,7 +119,7 @@ void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelect
     if (file.size() == 0) {                                     // Проверка размера файла
         exceptionCall("Пустой файл", "Выбранный файл пустой");  // Файл пустой, обработка исключения
         isChartActive = false;
-        file.close();
+        //file.close();
         return;
     }
 
@@ -145,8 +141,6 @@ void MainWindow::fileSelection(const QItemSelection &selected, const QItemSelect
     fileData = fileReader.getData(filePath);                        // с помощью стратегии читаем данные из выбранного файла
 }
 
-
-
 void MainWindow::changeChartType()
 {
     // Обработчик изменения типа диаграммы
@@ -166,29 +160,33 @@ void MainWindow::changeChartType()
     }
     // Рисуем график
    if (isChartActive) {
-       Container.GetObject<Chart>()->createChart(fileData,ChartView);
+       Container.GetObject<Chart>()->createChart(fileData,ChartView,ChkbxBlackWhiteChart->isChecked());
    }
 }
 
 void MainWindow::printChart()
 {
     // Обработчик печати диаграммы
-    // Логика печати диаграммы
+    if (isChartActive) {
+        QString filePath = QFileDialog::getSaveFileName(nullptr, "Сохранить PDF", "", "*.pdf");
+        QPdfWriter pdfWriter(filePath);
+        pdfWriter.setPageSize(QPageSize(QPageSize::A4));
+        // Создание печатного устройства и установка писателя в него
+        QPainter painter(&pdfWriter);
+        // Отрисовка графика
+        ChartView->render(&painter);
+        painter.end();
+    }else
+        exceptionCall("Файл не выбран", "Пожалуйста, выберите файл");
 }
 
 void MainWindow::colorSwap()
 {
     // Обработчик смены цвета диаграммы
-    if (ChkbxBlackWhiteChart->isChecked()) {
-        // Установить черно-белый эффект для диаграммы как при печати
-        QGraphicsColorizeEffect* colorizeEffect = new QGraphicsColorizeEffect;
-        colorizeEffect->setEnabled(true);
-        colorizeEffect->setColor(Qt::black);
-        ChartView->chart()->setGraphicsEffect(colorizeEffect);
-    } else {
-        // Отключить эффекты для возврата исходных цветов диаграммы
-        ChartView->chart()->setGraphicsEffect(nullptr);
+    if (isChartActive) {
+        Container.GetObject<Chart>()->createChart(fileData,ChartView, ChkbxBlackWhiteChart->isChecked());
     }
+
 }
 
 void MainWindow::exceptionCall(QString title, QString message)

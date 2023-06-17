@@ -45,8 +45,7 @@ private:
     QString DirectoryPath;          // путь к текущему каталогу
     QFileSystemModel* FileModel;    // модель файловой системы
     QTableView* TableFileView;      // виджет для отображения файловой системы в виде таблицы
-    QtCharts::QChartView* ChartView;// виджет для отображения диаграммы
-    QLabel* PathLabel;              // метка, отображающая текущий путь
+    std::unique_ptr<QtCharts::QChartView> ChartView;// виджет для отображения диаграммы
     QPushButton* BtnPrintChart;     // кнопка для печати диаграммы
     QPushButton* BtnChangeDirectory;// кнопка для изменения текущего каталога в таблице
     QCheckBox* ChkbxBlackWhiteChart;// флажок для изменения цветов диаграммы

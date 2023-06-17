@@ -1,5 +1,4 @@
 #include "readfile.h"
-#include<iostream>
 
 QList<QPair<QString, qfloat16>> SqlFileReader::getData(const QString& filePath)
 {
@@ -9,8 +8,7 @@ QList<QPair<QString, qfloat16>> SqlFileReader::getData(const QString& filePath)
     QList<QPair<QString, qfloat16>> result;
     if (db.open()) {                                         // Попытка открытия базы данных
         // Создание объекта запроса к базе данных SQLite, который выбирает все столбцы из первой таблицы и ограничивает результат до 10 строк
-        int k = 10;
-        QSqlQuery query ("SELECT * FROM " + db.tables().takeFirst() + " LIMIT 0," + QString::number(k));
+        QSqlQuery query ("SELECT * FROM " + db.tables().takeFirst() + " LIMIT 0,10");
 
         // Перебор результатов запроса. Запись значений первого и второго столбцов (индексы 0 и 1) каждой строки в result
         while (query.next()) {
