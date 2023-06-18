@@ -11,20 +11,19 @@
 #include <QtCharts/QPieSlice>
 #include <QtCharts/QLineSeries>
 
+// Базовый класс шаблонного метода с инструкцией
 class Chart {
 public:
     void createChart(QList<QPair<QString, qfloat16>>& data, std::unique_ptr<QtCharts::QChartView>& ChartView, bool bwCheck){
-        // Очистка окна рисования
-        ChartView->chart()->removeAllSeries();
+        ChartView->chart()->removeAllSeries();              // Очистка окна рисования
 
-        setupTitle(ChartView);
+        setupTitle(ChartView);                              // Установка заголовка диаграммы
 
-        createSeries(data, ChartView, bwCheck);
+        createSeries(data, ChartView, bwCheck);             // Создание диаграммы
 
-        ChartView->setRenderHint(QPainter::Antialiasing);
+        ChartView->setRenderHint(QPainter::Antialiasing);   // Рендеринг
 
-        // Обновление окна вывода
-        ChartView->update();
+        ChartView->update();                                // Обновление окна вывода
     };
     virtual ~Chart() = default;
 
@@ -34,25 +33,20 @@ protected:
 
 };
 
+// Конкретные классы-диаграммы
 class BarChart: public Chart {
-public:
-    ~BarChart() override = default;
 protected:
     void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView,bool bwCheck)override;
     void setupTitle(std::unique_ptr<QtCharts::QChartView>& ChartView)override;
 };
 
 class PieChart: public Chart {
-public:
-    ~PieChart() override = default;
 protected:
     void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView,bool bwCheck)override;
     void setupTitle(std::unique_ptr<QtCharts::QChartView>& ChartView)override;
 };
 
 class LineChart: public Chart {
-public:
-    ~LineChart() override = default;
 protected:
     void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView,bool bwCheck)override;
     void setupTitle(std::unique_ptr<QtCharts::QChartView>& ChartView)override;
