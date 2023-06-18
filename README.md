@@ -27,4 +27,4 @@
 Метод createChart базового класса Chart вызывает абстрактные методы createSeries и setupTitle, которые переопределены в конкретных классах-диаграммах. Это позволяет конкретным классам внедрять свою специфическую логику для создания серий диаграмм и установки заголовков.
 
 # UML диаграмма решения
-[UML](https://raw.githubusercontent.com/AlexaZebra/Third_QLab/main/Lab3.jpg)
+![UML](https://raw.githubusercontent.com/AlexaZebra/Third_QLab/main/Lab3.jpg)
