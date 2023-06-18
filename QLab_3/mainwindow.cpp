@@ -186,10 +186,9 @@ void MainWindow::colorSwap()
     // Обработчик смены цвета диаграммы
     if (ChkbxBlackWhiteChart->isChecked()) {
         // Установить черно-белый эффект для диаграммы как при печати
-        QGraphicsColorizeEffect* colorizeEffect = new QGraphicsColorizeEffect;
-        colorizeEffect->setEnabled(true);
+        std::unique_ptr<QGraphicsColorizeEffect>colorizeEffect = std::make_unique<QGraphicsColorizeEffect>();
         colorizeEffect->setColor(Qt::black);
-        ChartView->chart()->setGraphicsEffect(colorizeEffect);
+        ChartView->chart()->setGraphicsEffect(colorizeEffect.release());
     } else {
         // Отключить эффекты для возврата исходных цветов диаграммы
         ChartView->chart()->setGraphicsEffect(nullptr);
