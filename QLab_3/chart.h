@@ -14,12 +14,12 @@
 // Базовый класс шаблонного метода с инструкцией
 class Chart {
 public:
-    void createChart(QList<QPair<QString, qfloat16>>& data, std::unique_ptr<QtCharts::QChartView>& ChartView, bool bwCheck){
+    void createChart(QList<QPair<QString, qfloat16>>& data, std::unique_ptr<QtCharts::QChartView>& ChartView){
         ChartView->chart()->removeAllSeries();              // Очистка окна рисования
 
         setupTitle(ChartView);                              // Установка заголовка диаграммы
 
-        createSeries(data, ChartView, bwCheck);             // Создание диаграммы
+        createSeries(data, ChartView);                      // Создание диаграммы
 
         ChartView->setRenderHint(QPainter::Antialiasing);   // Рендеринг
 
@@ -29,26 +29,26 @@ public:
 
 protected:
     virtual void setupTitle(std::unique_ptr<QtCharts::QChartView>& ChartView)=0;
-    virtual void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView, bool bwCheck)=0;
+    virtual void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView)=0;
 
 };
 
 // Конкретные классы-диаграммы
 class BarChart: public Chart {
 protected:
-    void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView,bool bwCheck)override;
+    void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView)override;
     void setupTitle(std::unique_ptr<QtCharts::QChartView>& ChartView)override;
 };
 
 class PieChart: public Chart {
 protected:
-    void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView,bool bwCheck)override;
+    void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView)override;
     void setupTitle(std::unique_ptr<QtCharts::QChartView>& ChartView)override;
 };
 
 class LineChart: public Chart {
 protected:
-    void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView,bool bwCheck)override;
+    void createSeries(QList<QPair<QString, qfloat16>> data, std::unique_ptr<QtCharts::QChartView>& ChartView)override;
     void setupTitle(std::unique_ptr<QtCharts::QChartView>& ChartView)override;
 };
 #endif // CHART_H

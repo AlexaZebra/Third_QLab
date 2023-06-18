@@ -160,7 +160,7 @@ void MainWindow::changeChartType()
     }
     // Рисуем график
    if (isChartActive) {
-       Container.GetObject<Chart>()->createChart(fileData,ChartView,ChkbxBlackWhiteChart->isChecked());
+       Container.GetObject<Chart>()->createChart(fileData,ChartView);
    }
 }
 
@@ -176,6 +176,7 @@ void MainWindow::printChart()
         // Отрисовка графика
         ChartView->render(&painter);
         painter.end();
+
     }else
         exceptionCall("Файл не выбран", "Пожалуйста, выберите файл");
 }
@@ -183,9 +184,17 @@ void MainWindow::printChart()
 void MainWindow::colorSwap()
 {
     // Обработчик смены цвета диаграммы
-    if (isChartActive) {
-        Container.GetObject<Chart>()->createChart(fileData,ChartView, ChkbxBlackWhiteChart->isChecked());
+    if (ChkbxBlackWhiteChart->isChecked()) {
+        // Установить черно-белый эффект для диаграммы как при печати
+        QGraphicsColorizeEffect* colorizeEffect = new QGraphicsColorizeEffect;
+        colorizeEffect->setEnabled(true);
+        colorizeEffect->setColor(Qt::black);
+        ChartView->chart()->setGraphicsEffect(colorizeEffect);
+    } else {
+        // Отключить эффекты для возврата исходных цветов диаграммы
+        ChartView->chart()->setGraphicsEffect(nullptr);
     }
+
 }
 
 void MainWindow::exceptionCall(QString title, QString message)
