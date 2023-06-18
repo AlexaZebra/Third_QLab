@@ -10,7 +10,7 @@
 // Интерфейс стратегии для чтения файлов
 class IFileReader {
 public:
-    virtual ~IFileReader() = default;                   // Виртуальный деструктор
+    virtual ~IFileReader() = default;   // Виртуальный деструктор
     virtual QList<QPair<QString, qfloat16>> getData(const QString& filePath) = 0;// Извлекает данные типа ключ-значение из указанного файла
 
 };
@@ -38,8 +38,6 @@ private:
     std::shared_ptr<IFileReader> strategy;                                      // Указатель на стратегию чтения файла
 public:
     FileReader(std::shared_ptr<IFileReader> strategy) : strategy(strategy) {}   // Конструктор класса FileReader, принимает стратегию чтения файла
-
-    //void setStrategy(std::shared_ptr<IFileReader> strategy);                    // Метод для установки стратегии чтения файла
 
     QList<QPair<QString, qfloat16>> getData(const QString& filePath);           // Метод для получения данных из файла, принимает путь к файлу
 };

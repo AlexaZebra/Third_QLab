@@ -19,14 +19,14 @@ QList<QPair<QString, qfloat16>> SqlFileReader::getData(const QString& filePath)
         db.close();                                             // Закрытие базы данных
     }
 
-    return result;                                            // В случае успешного чтения файла возвращается result
+    return result;                                              // В случае успешного чтения файла возвращается result
 }
 
 QList<QPair<QString, qfloat16>> JsonFileReader::getData(const QString& filePath)
 {
-    QFile file(filePath);                                   // Создание объекта файла
+    QFile file(filePath);                                       // Создание объекта файла
     QList<QPair<QString, qfloat16>> result;
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)){  // Открытие файла в режиме чтения
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)){      // Открытие файла в режиме чтения
 
         QByteArray jsonData = file.readAll();                   // Чтение содержимого файла
         file.close();                                           // Закрытие файла
@@ -75,12 +75,6 @@ QList<QPair<QString, qfloat16>> CsvFileReader::getData(const QString& filePath)
     }
     return result;
 }
-
-
-//void FileReader::setStrategy(std::shared_ptr<IFileReader> strategy)
-//{
-  //  this->strategy = strategy;  // Установка переданной стратегии чтения файла
-//}
 
 QList<QPair<QString, qfloat16>> FileReader::getData(const QString& filePath)
 {
