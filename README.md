@@ -33,4 +33,4 @@
 Конкретные классы-диаграммы, такие как BarChart, PieChart и LineChart, наследуются от базового класса Chart и реализуют его виртуальные методы createSeries и setupTitle.
 
 # UML диаграмма решения
-![UML](https://raw.githubusercontent.com/AlexaZebra/Third_QLab/main/Lab3.jpg)
+![UML](https://raw.githubusercontent.com/AlexaZebra/Third_QLab/main/Lab_3.jpg)
